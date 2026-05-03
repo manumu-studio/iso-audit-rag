@@ -1,5 +1,14 @@
-# Pydantic schemas for the `/ask` endpoint and shared API response types.
+# Shared Pydantic response and domain models for API routes.
 from pydantic import BaseModel, ConfigDict, Field
+
+
+class UploadResponse(BaseModel):
+    """Summary returned after a PDF is chunked, embedded, and stored."""
+
+    filename: str
+    total_pages: int
+    chunks_created: int
+    processing_ms: int
 
 
 class AskRequest(BaseModel):

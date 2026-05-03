@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+# Fast checks before commit (mirrors local quality bar; backend needs .venv — see README).
+
+set -e
+
+ROOT="$(git rev-parse --show-toplevel)"
+
+echo "husky pre-commit: frontend (pnpm)"
+cd "$ROOT/frontend"
+pnpm typecheck
+pnpm lint
+
+echo "husky pre-commit: backend (.venv)"
+cd "$ROOT/backend"
+if [ ! -x .venv/bin/ruff ]; then
+  echo "error: backend/.venv missing or incomplete. Run: cd backend && uv venv --python 3.11 .venv && . .venv/bin/activate && uv pip install -e \".[dev]\""
+  exit 1
+fi
+.venv/bin/ruff check .
+.venv/bin/ruff format --check .
+.venv/bin/mypy --strict app/
+.venv/bin/mypy --strict tests/
+
+echo "husky pre-commit: ok"

@@ -1,4 +1,4 @@
-# ENTRY-02 — Retrieval pipeline and natural-language `/ask` API
+# ENTRY-04 — Retrieval pipeline and natural-language `/ask` API
 
 **Date:** 2026-05-03
 **Type:** Feature

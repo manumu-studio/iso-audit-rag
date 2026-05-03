@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import db
+from app.config import settings
 from app.routes import router
 
 
@@ -16,7 +17,8 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     if os.environ.get("ISO_AUDIT_TESTING") == "1":
         yield
     else:
-        await db.init_pool()
+        await db.init_pool(settings.database_url)
+        await db.create_schema(db.get_pool())
         try:
             yield
         finally:

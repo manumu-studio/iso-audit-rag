@@ -1,0 +1,29 @@
+#!/usr/bin/env sh
+# Full checks before push (aligned with .github/workflows/ci.yml — no npm test:coverage).
+
+set -e
+
+ROOT="$(git rev-parse --show-toplevel)"
+
+echo "husky pre-push: frontend"
+cd "$ROOT/frontend"
+if [ ! -d node_modules ]; then
+  echo "error: frontend/node_modules missing. Run: cd frontend && pnpm install"
+  exit 1
+fi
+pnpm lint
+pnpm typecheck
+pnpm build
+
+echo "husky pre-push: backend"
+cd "$ROOT/backend"
+if [ ! -x .venv/bin/pytest ]; then
+  echo "error: backend/.venv missing or incomplete. Run: cd backend && uv venv --python 3.11 .venv && . .venv/bin/activate && uv pip install -e \".[dev]\""
+  exit 1
+fi
+.venv/bin/ruff check .
+.venv/bin/ruff format --check .
+.venv/bin/mypy --strict app/
+.venv/bin/pytest -v
+
+echo "husky pre-push: ok"
