@@ -33,7 +33,7 @@ jobs:
         run: uv run ruff check .
 
       - name: Type check (mypy --strict)
-        run: uv run mypy --strict app/
+        run: uv run mypy --strict app/ tests/
 
       - name: Tests (pytest)
         run: uv run pytest -v

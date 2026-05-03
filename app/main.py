@@ -1,10 +1,14 @@
-# FastAPI application factory: lifespan, CORS, and the `/health` route.
+# FastAPI application factory: lifespan, CORS, health check, and API routes.
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
+from app import db
+from app.config import settings
+from app.routes import router as api_router
 
 
 class HealthResponse(BaseModel):
@@ -15,13 +19,15 @@ class HealthResponse(BaseModel):
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
-    # Placeholder — asyncpg connection pool will be initialised here.
+    await db.init_pool(settings.database_url)
+    await db.create_schema(db.get_pool())
     yield
+    await db.close_pool()
 
 
 app = FastAPI(
     title="iso-audit-rag",
-    version="0.1.0",
+    version="0.2.0",
     lifespan=lifespan,
 )
 
@@ -32,6 +38,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(api_router)
 
 
 @app.get("/health", response_model=HealthResponse)
