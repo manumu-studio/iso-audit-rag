@@ -21,7 +21,7 @@ def test_chunk_splits_long_text() -> None:
 def test_chunk_overlap() -> None:
     """Consecutive chunks share overlapping text content."""
     # Build text long enough for multiple chunks; use sentences for cleaner breaks
-    sentences = ["This is sentence number %d. " % i for i in range(200)]
+    sentences = [f"This is sentence number {i}. " for i in range(200)]
     long_text = "".join(sentences)
 
     result = chunk_text(long_text, max_chars=500, overlap=100)

@@ -1,6 +1,6 @@
 # Integration tests for POST /ask endpoint with all external services mocked.
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 from httpx import AsyncClient
@@ -56,9 +56,7 @@ async def test_ask_returns_answer(
     mock_db_pool: None,
 ) -> None:
     """POST /ask returns answer, citations, and meta with search_method."""
-    response = await async_client.post(
-        "/ask", json={"question": "What is AC-2?"}
-    )
+    response = await async_client.post("/ask", json={"question": "What is AC-2?"})
     assert response.status_code == 200
     data = response.json()
 
@@ -89,9 +87,7 @@ async def test_ask_no_results(
     monkeypatch.setattr("app.routes.hybrid_search", fake_search)
     monkeypatch.setattr("app.routes.get_total_controls", fake_count)
 
-    response = await async_client.post(
-        "/ask", json={"question": "What is XY-99?"}
-    )
+    response = await async_client.post("/ask", json={"question": "What is XY-99?"})
     assert response.status_code == 200
     data = response.json()
     assert "No relevant controls found" in data["answer"]
@@ -110,9 +106,7 @@ async def test_ask_embedding_failure(
 
     monkeypatch.setattr("app.routes.embed_single", failing_embed)
 
-    response = await async_client.post(
-        "/ask", json={"question": "What is AC-2?"}
-    )
+    response = await async_client.post("/ask", json={"question": "What is AC-2?"})
     assert response.status_code == 502
 
 
@@ -140,9 +134,7 @@ async def test_ask_llm_failure(
     monkeypatch.setattr("app.routes.generate_answer", failing_generate)
     monkeypatch.setattr("app.routes.get_total_controls", fake_count)
 
-    response = await async_client.post(
-        "/ask", json={"question": "What is AC-2?"}
-    )
+    response = await async_client.post("/ask", json={"question": "What is AC-2?"})
     assert response.status_code == 502
 
 

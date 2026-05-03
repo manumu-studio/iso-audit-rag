@@ -1,19 +1,25 @@
 #!/usr/bin/env sh
-# Fast checks before commit: frontend lint + typecheck, backend ruff + mypy.
+# Checks before commit — same gates as pre-push except frontend build (run on push).
 
 set -e
 
 ROOT="$(git rev-parse --show-toplevel)"
 
-echo "husky pre-commit: frontend (npm)"
+echo "husky pre-commit: frontend"
 cd "$ROOT/frontend"
-npx tsc --noEmit
+if [ ! -d node_modules ]; then
+  echo "error: frontend/node_modules missing. Run: cd frontend && npm install"
+  exit 1
+fi
 npm run lint
+npm run type-check
+npm run test
 
-echo "husky pre-commit: backend (uv)"
+echo "husky pre-commit: backend"
 cd "$ROOT/backend"
 uv run ruff check .
 uv run ruff format --check .
-uv run mypy --strict app/ tests/
+uv run mypy --strict app/ scripts/ tests/
+ISO_AUDIT_TESTING=1 uv run pytest -v
 
 echo "husky pre-commit: ok"

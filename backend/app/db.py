@@ -4,9 +4,7 @@ from pathlib import Path
 
 import asyncpg
 
-_SCHEMA_PATH: Path = (
-    Path(__file__).resolve().parent.parent / "scripts" / "create-schema.sql"
-)
+_SCHEMA_PATH: Path = Path(__file__).resolve().parent.parent / "scripts" / "create-schema.sql"
 
 _pool: asyncpg.Pool | None = None
 

@@ -19,7 +19,12 @@ function jsonResponse(body: unknown, status = 200): Response {
 /* ------------------------------------------------------------------ */
 
 describe("API client", () => {
+  let previousApiUrl: string | undefined;
+
   beforeEach(() => {
+    previousApiUrl = process.env.NEXT_PUBLIC_API_URL;
+    process.env.NEXT_PUBLIC_API_URL = "http://localhost:8000";
+
     vi.stubGlobal("fetch", vi.fn());
     // Ensure XMLHttpRequest is undefined so uploadDocument uses fetchApi path
     vi.stubGlobal("XMLHttpRequest", undefined);
@@ -28,6 +33,12 @@ describe("API client", () => {
   afterEach(() => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
+
+    if (previousApiUrl === undefined) {
+      delete process.env.NEXT_PUBLIC_API_URL;
+    } else {
+      process.env.NEXT_PUBLIC_API_URL = previousApiUrl;
+    }
   });
 
   it("askQuestion sends POST /ask with the question body", async () => {
