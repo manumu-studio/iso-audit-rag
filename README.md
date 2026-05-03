@@ -74,6 +74,11 @@ uv run uvicorn app.main:app --reload
 # 7. Smoke-test the health endpoint
 curl http://localhost:8000/health
 # -> {"status":"ok"}
+
+# 8. Ask a compliance question (requires ingested controls + API keys)
+curl -s -X POST http://localhost:8000/ask \
+  -H "Content-Type: application/json" \
+  -d '{"question": "What is AC-2?"}'
 ```
 
 ## Development
@@ -86,7 +91,7 @@ uv run pytest -v
 uv run ruff check .
 
 # Strict type-check
-uv run mypy --strict app/
+uv run mypy --strict app/ tests/
 ```
 
 ### Download sample compliance PDFs

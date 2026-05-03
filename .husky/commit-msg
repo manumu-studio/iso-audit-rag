@@ -1,0 +1,41 @@
+#!/bin/sh
+# Commit-msg hook — enforces conventional commit format and Golden Goose Rule.
+# Blocks any reference to internal workflow (packets, tasks, AI tools).
+
+COMMIT_MSG_FILE="$1"
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+FIRST_LINE=$(head -n 1 "$COMMIT_MSG_FILE")
+
+# ─── Format check: type(scope): description ───
+
+if ! echo "$FIRST_LINE" | grep -qE '^(feat|fix|chore|refactor|test|docs|style|perf|ci|build|revert)\([a-z0-9-]+\): .{3,}'; then
+  echo ""
+  echo "❌ Invalid commit message format."
+  echo ""
+  echo "Expected: type(scope): description"
+  echo "Types: feat | fix | chore | refactor | test | docs | style | perf | ci | build | revert"
+  echo ""
+  echo "Example:"
+  echo "  fix(auth): restore trustHost for production OAuth"
+  echo ""
+  exit 1
+fi
+
+# ─── Golden Goose Rule: block internal references ───
+
+BANNED_PATTERNS="PACKET-[0-9]\|TASK-[0-9]\|cursor-tasks\|build-packets\|cursor-task-reports\|build-packet-reports\|session-prompts\|DEVELOPMENT_PLAYBOOK\|\.cursorrules\|CONTINUATION_PROMPT\|PROJECT_MAP\|Claude Code\|Cursor AI"
+
+if echo "$COMMIT_MSG" | grep -qi "$BANNED_PATTERNS"; then
+  echo ""
+  echo "🔴 GOLDEN GOOSE RULE VIOLATION"
+  echo ""
+  echo "Commit message contains internal workflow references."
+  echo "Remove any mention of: PACKET-XX, TASK-NNN, Cursor, Claude Code,"
+  echo "build-packets, cursor-tasks, or other internal tooling."
+  echo ""
+  echo "Write as if a human developer did the work."
+  echo ""
+  exit 1
+fi
+
+echo "✅ Commit message OK"

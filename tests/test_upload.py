@@ -53,7 +53,7 @@ def mock_db_io(
     async def fake_insert(_pool: Any, chunks: Any, _embeddings: Any) -> None:
         insert_chunk_counts.append(len(chunks))
 
-    monkeypatch.setattr("app.routes.get_pool", lambda: None)
+    monkeypatch.setattr("app.routes.db.get_pool", lambda: None)
     monkeypatch.setattr("app.routes.delete_document_chunks", fake_delete)
     monkeypatch.setattr("app.routes.insert_document_chunks", fake_insert)
     return delete_hits, insert_chunk_counts

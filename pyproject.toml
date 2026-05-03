@@ -1,6 +1,6 @@
 [project]
 name = "iso-audit-rag"
-version = "0.3.0"
+version = "0.4.0"
 description = "RAG-powered API for querying NIST SP 800-53 compliance controls with natural language."
 readme = "README.md"
 requires-python = ">=3.13"

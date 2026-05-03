@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     max_upload_size_mb: int = 20
     openai_api_key: str = ""
     anthropic_api_key: str = ""
+    anthropic_model: str = "claude-sonnet-4-6"
+    search_top_k: int = 10
+    rrf_k: int = 60
     environment: Literal["dev", "prod"] = "dev"
     log_level: str = "INFO"
 
