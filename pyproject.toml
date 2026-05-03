@@ -36,6 +36,12 @@ known-first-party = ["app"]
 strict = true
 plugins = ["pydantic.mypy"]
 
+# asyncpg does not ship a py.typed marker / stubs as of 0.30.x.
+# Treat its public API as untyped without polluting source files with `# type: ignore`.
+[[tool.mypy.overrides]]
+module = "asyncpg.*"
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
