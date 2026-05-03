@@ -1,39 +1,48 @@
-# Backend CI: lint (ruff), type-check (mypy --strict), and run pytest.
-# Runs on every push and pull request. No DB / external API calls — those
-# arrive in later packets and will need their own service containers / secrets.
-
+# Backend CI: lint (ruff), type-check (mypy --strict), and pytest on backend path changes.
 name: Backend CI
 
 on:
   push:
+    paths:
+      - "app/**"
+      - "tests/**"
+      - "scripts/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/backend-ci.yml"
   pull_request:
+    paths:
+      - "app/**"
+      - "tests/**"
+      - "scripts/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/backend-ci.yml"
 
 jobs:
-  lint-typecheck-test:
+  lint-test:
+    name: Lint, type-check, test
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Python 3.13
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
 
-      - name: Install uv
-        run: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
 
-      - name: Install dependencies
-        run: uv sync
+      - run: uv sync --frozen
 
-      - name: Lint (ruff)
+      - name: Lint
         run: uv run ruff check .
 
-      - name: Type check (mypy --strict)
-        run: uv run mypy --strict app/
+      - name: Type check
+        run: uv run mypy --strict app/ scripts/ tests/
 
-      - name: Tests (pytest)
+      - name: Test
         run: uv run pytest -v

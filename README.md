@@ -73,8 +73,12 @@ uv run pytest -v
 uv run ruff check .
 
 # Strict type-check
-uv run mypy --strict app/
+uv run mypy --strict app/ scripts/ tests/
 ```
+
+## Production deployment
+
+The backend is designed to run behind Nginx on Ubuntu with systemd and to deploy from GitHub Actions after CI passes on `main`. See **[docs/deployment/RUNBOOK.md](docs/deployment/RUNBOOK.md)** for EC2, DNS, Neon, OIDC, and validation steps.
 
 ## Data Source
 
