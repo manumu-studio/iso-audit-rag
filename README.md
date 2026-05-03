@@ -6,23 +6,38 @@ RAG-powered API for querying NIST SP 800-53 compliance controls with natural lan
 
 ```mermaid
 graph TD
-  subgraph ingestion["Ingestion Pipeline (offline)"]
+  subgraph frontend["Frontend (Next.js 15 on Vercel)"]
+    UI[Chat UI] -->|fetch + Zod| ApiClient[API Client]
+    Upload[PDF Upload] -->|XHR + progress| ApiClient
+  end
+
+  subgraph ingestion["Ingestion: OSCAL Controls (offline)"]
     OSCAL[OSCAL JSON] --> Parser[JSON parser]
     Parser --> Chunker[Clause-aware chunker]
-    Chunker --> Embedder[Embedding model]
-    Embedder --> Store[(pgvector)]
+    Chunker --> Embedder1[Embedding model]
+    Embedder1 --> Controls[(controls table)]
+  end
+
+  subgraph upload_pipeline["Ingestion: PDF Upload (runtime)"]
+    PDF[PDF file] --> Extract[PyMuPDF extractor]
+    Extract --> PageChunk[Page-based chunker]
+    PageChunk --> Embedder2[Embedding model]
+    Embedder2 --> Documents[(documents table)]
   end
 
   subgraph retrieval["Retrieval Pipeline (runtime)"]
-    Query[User question] --> QEmbed[Query embedding]
+    ApiClient -->|POST /ask| QEmbed[Query embedding]
+    ApiClient -->|POST /upload| PDF
     QEmbed --> Search[Hybrid search: BM25 + vector]
-    Search --> Rerank[Reranker]
-    Rerank --> Context[Top-K chunks + metadata]
+    Search --> RRF[RRF fusion k=60]
+    RRF --> Context[Top-K chunks + metadata]
     Context --> LLM[Claude]
-    LLM --> Answer[Answer + clause citations]
+    LLM --> Answer[Answer + citations]
+    Answer --> ApiClient
   end
 
-  Store --> Search
+  Controls --> Search
+  Documents --> Search
 ```
 
 ## Tech Stack
@@ -35,7 +50,7 @@ graph TD
 | Embeddings | OpenAI `text-embedding-3-small` |
 | Generation | Anthropic Claude (`claude-sonnet-4-6`) |
 | Retrieval | Hybrid BM25 + vector with RRF fusion |
-| Frontend | Next.js chat UI on Vercel |
+| Frontend | Next.js 15 + React 19 + Tailwind 4 (Vercel) |
 | Deployment | EC2 (Nginx + systemd) |
 
 ## Quickstart
@@ -45,14 +60,15 @@ graph TD
 git clone https://github.com/<you>/iso-audit-rag.git
 cd iso-audit-rag
 
-# 2. Configure secrets
+# 2. Backend — configure secrets
+cd backend
 cp .env.example .env
-# then edit .env and fill in OPENAI_API_KEY and ANTHROPIC_API_KEY
+# Edit .env (OPENAI_API_KEY, ANTHROPIC_API_KEY, DATABASE_URL when applicable)
 
-# 3. Start Postgres + pgvector
+# 3. Start Postgres + pgvector (run compose from backend/)
 docker compose up db -d
 
-# 4. Install Python dependencies (uv-managed virtualenv)
+# 4. Install Python dependencies (backend/.venv)
 uv sync
 
 # 5. Run the API
@@ -61,19 +77,30 @@ uv run uvicorn app.main:app --reload
 # 6. Smoke-test the health endpoint
 curl http://localhost:8000/health
 # -> {"status":"ok"}
+
+# 7. Frontend (separate terminal)
+cd ../frontend
+npm install
+cp .env.example .env.local
+# NEXT_PUBLIC_API_URL=http://localhost:8000 for local API
+npm run dev
+# Open http://localhost:3000
 ```
 
 ## Development
 
 ```bash
-# Run the test suite
-uv run pytest -v
-
-# Lint
+# Backend
+cd backend
+ISO_AUDIT_TESTING=1 uv run pytest -v
 uv run ruff check .
+uv run mypy --strict app/ scripts/ tests/
 
-# Strict type-check
-uv run mypy --strict app/
+# Frontend
+cd frontend
+npm run lint
+npm run type-check
+npm run build
 ```
 
 ## Data Source

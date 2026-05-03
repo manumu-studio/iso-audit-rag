@@ -1,0 +1,14 @@
+[Unit]
+Description=ISO Audit RAG FastAPI API
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/iso-audit-rag/backend
+EnvironmentFile=/home/ubuntu/iso-audit-rag/backend/.env
+ExecStart=/home/ubuntu/.local/bin/uv run uvicorn app.main:app --host 127.0.0.1 --port 8000
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

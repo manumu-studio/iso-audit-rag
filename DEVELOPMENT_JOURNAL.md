@@ -7,3 +7,4 @@ documentation under [`docs/pull-requests/`](docs/pull-requests/).
 | # | Date | Type | Version | Title | Journal | PR doc |
 |---|------|------|---------|-------|---------|--------|
 | 1 | 2026-05-03 | Infrastructure | `0.1.0` | Project scaffold | [ENTRY-01](docs/journal/ENTRY-01-project-scaffold.md) | [PR-0.1.0](docs/pull-requests/PR-0.1.0-project-scaffold.md) |
+| 2 | 2026-05-03 | Feature | `0.6.0` | Frontend chat UI + monorepo restructure | [ENTRY-06](docs/journal/ENTRY-06-frontend-chat-ui.md) | [PR-0.6.0](docs/pull-requests/PR-0.6.0-frontend-chat-ui.md) |
