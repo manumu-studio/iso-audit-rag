@@ -6,6 +6,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from app import db
+from app.config import settings
+
 
 class HealthResponse(BaseModel):
     """Response body for `GET /health`."""
@@ -15,8 +18,12 @@ class HealthResponse(BaseModel):
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
-    # Placeholder — asyncpg connection pool will be initialised here.
-    yield
+    await db.init_pool(settings.database_url)
+    await db.create_schema(db.get_pool())
+    try:
+        yield
+    finally:
+        await db.close_pool()
 
 
 app = FastAPI(
