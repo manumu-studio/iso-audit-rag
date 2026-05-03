@@ -64,7 +64,13 @@ docs/COMMANDS-CHEATSHEET.md
 docs/research/*
 !docs/research/DECISIONS.md
 
+# Sample data (large binaries, downloaded PDFs)
+data/
+
 # Coverage
 coverage/
 .coverage
 htmlcov/
+
+# Sample PDFs (downloaded on demand)
+data/sample-pdfs/

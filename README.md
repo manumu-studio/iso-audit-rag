@@ -6,23 +6,31 @@ RAG-powered API for querying NIST SP 800-53 compliance controls with natural lan
 
 ```mermaid
 graph TD
-  subgraph ingestion["Ingestion Pipeline (offline)"]
+  subgraph ingestion["Ingestion: OSCAL Controls (offline)"]
     OSCAL[OSCAL JSON] --> Parser[JSON parser]
     Parser --> Chunker[Clause-aware chunker]
-    Chunker --> Embedder[Embedding model]
-    Embedder --> Store[(pgvector)]
+    Chunker --> Embedder1[Embedding model]
+    Embedder1 --> Controls[(controls table)]
+  end
+
+  subgraph upload["Ingestion: PDF Upload (runtime)"]
+    PDF[PDF file] --> Extract[PyMuPDF extractor]
+    Extract --> PageChunk[Page-based chunker]
+    PageChunk --> Embedder2[Embedding model]
+    Embedder2 --> Documents[(documents table)]
   end
 
   subgraph retrieval["Retrieval Pipeline (runtime)"]
     Query[User question] --> QEmbed[Query embedding]
     QEmbed --> Search[Hybrid search: BM25 + vector]
-    Search --> Rerank[Reranker]
-    Rerank --> Context[Top-K chunks + metadata]
+    Search --> RRF[RRF fusion]
+    RRF --> Context[Top-K chunks + metadata]
     Context --> LLM[Claude]
-    LLM --> Answer[Answer + clause citations]
+    LLM --> Answer[Answer + citations]
   end
 
-  Store --> Search
+  Controls --> Search
+  Documents --> Search
 ```
 
 ## Tech Stack
@@ -55,12 +63,22 @@ docker compose up db -d
 # 4. Install Python dependencies (uv-managed virtualenv)
 uv sync
 
-# 5. Run the API
+# 5. Ingest the NIST SP 800-53 Rev 5 catalog (one-off, ~1 minute)
+uv run python scripts/ingest.py
+# Loads the OSCAL JSON, embeds 1,014 controls + enhancements via OpenAI,
+# and upserts everything into the `controls` table. Idempotent.
+
+# 6. Run the API
 uv run uvicorn app.main:app --reload
 
-# 6. Smoke-test the health endpoint
+# 7. Smoke-test the health endpoint
 curl http://localhost:8000/health
 # -> {"status":"ok"}
+
+# 8. Ask a compliance question (requires ingested controls + API keys)
+curl -s -X POST http://localhost:8000/ask \
+  -H "Content-Type: application/json" \
+  -d '{"question": "What is AC-2?"}'
 ```
 
 ## Development
@@ -74,6 +92,18 @@ uv run ruff check .
 
 # Strict type-check
 uv run mypy --strict app/ scripts/ tests/
+```
+
+### Download sample compliance PDFs
+
+```bash
+uv run python scripts/download-sample-pdfs.py
+```
+
+### Upload a PDF to the system
+
+```bash
+curl -X POST http://localhost:8000/upload -F "file=@data/sample-pdfs/NIST-CSF-2.0.pdf"
 ```
 
 ## Production deployment
