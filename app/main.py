@@ -21,13 +21,15 @@ class HealthResponse(BaseModel):
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     await db.init_pool(settings.database_url)
     await db.create_schema(db.get_pool())
-    yield
-    await db.close_pool()
+    try:
+        yield
+    finally:
+        await db.close_pool()
 
 
 app = FastAPI(
     title="iso-audit-rag",
-    version="0.2.0",
+    version="0.3.0",
     lifespan=lifespan,
 )
 

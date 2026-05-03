@@ -1,17 +1,17 @@
 -- Application schema for iso-audit-rag: NIST controls and uploaded PDF chunks.
--- Executed on app startup (idempotent). Requires the pgvector extension (see init-db.sql).
+-- Idempotent: safe to run on every app boot.
 
 CREATE EXTENSION IF NOT EXISTS vector;
 
 -- OSCAL-derived control chunks for hybrid retrieval (BM25 + dense vectors).
 CREATE TABLE IF NOT EXISTS controls (
-    id              TEXT PRIMARY KEY,
+    id              TEXT PRIMARY KEY,                  -- e.g. "AC-2", "AC-2(1)"
     title           TEXT NOT NULL,
-    family          TEXT NOT NULL,
-    description     TEXT NOT NULL,
-    search_vector   tsvector,
-    embedding       vector(1536),
-    metadata        JSONB DEFAULT '{}'::jsonb
+    family          TEXT NOT NULL,                     -- e.g. "Access Control"
+    description     TEXT NOT NULL,                     -- concatenated statement prose
+    search_vector   tsvector,                          -- BM25 via GIN index
+    embedding       vector(1536),                      -- text-embedding-3-small
+    metadata        JSONB DEFAULT '{}'::jsonb          -- params, props, links
 );
 
 CREATE INDEX IF NOT EXISTS idx_controls_embedding
@@ -22,7 +22,6 @@ CREATE INDEX IF NOT EXISTS idx_controls_search
 
 -- Uploaded PDF chunks for document-level RAG retrieval.
 -- Each row is one chunk from one page of an uploaded PDF.
-
 CREATE TABLE IF NOT EXISTS documents (
     id              TEXT PRIMARY KEY,
     filename        TEXT NOT NULL,

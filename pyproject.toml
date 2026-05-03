@@ -1,6 +1,6 @@
 [project]
 name = "iso-audit-rag"
-version = "0.2.0"
+version = "0.3.0"
 description = "RAG-powered API for querying NIST SP 800-53 compliance controls with natural language."
 readme = "README.md"
 requires-python = ">=3.13"
@@ -42,8 +42,9 @@ plugins = ["pydantic.mypy"]
 module = "fitz.*"
 ignore_missing_imports = true
 
+# asyncpg does not ship a py.typed marker / stubs as of 0.30.x.
 [[tool.mypy.overrides]]
-module = "asyncpg"
+module = "asyncpg.*"
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

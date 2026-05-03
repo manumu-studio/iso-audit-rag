@@ -8,13 +8,19 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-EMBEDDING_MODEL = "text-embedding-3-small"
-EMBEDDING_DIMENSIONS = 1536
-BATCH_SIZE = 100
+EMBEDDING_MODEL: str = "text-embedding-3-small"
+EMBEDDING_DIMENSIONS: int = 1536
+BATCH_SIZE: int = 100
 
 
 async def embed_texts(texts: list[str]) -> list[list[float]]:
-    """Return embedding vectors for each string, preserving order."""
+    """Embed a list of texts in fixed-size batches.
+
+    Creates a fresh `AsyncOpenAI` client per call so that an empty
+    `OPENAI_API_KEY` never blows up at import time (e.g. when the
+    health check imports `app.main` without secrets configured).
+    Returns a list of 1536-dim float vectors aligned 1:1 with `texts`.
+    """
     if not texts:
         return []
 
@@ -34,6 +40,6 @@ async def embed_texts(texts: list[str]) -> list[list[float]]:
 
 
 async def embed_single(text: str) -> list[float]:
-    """Embed a single string (convenience for query-time use in later packets)."""
+    """Convenience wrapper for the query-time path: embed one string, return one vector."""
     vectors = await embed_texts([text])
     return vectors[0]

@@ -1,9 +1,9 @@
-# ENTRY-02 — PDF upload pipeline
+# ENTRY-03 — PDF upload pipeline
 
 **Date:** 2026-05-03
 **Type:** Feature
 **Branch:** `feat/pdf-upload`
-**Version:** `0.2.0`
+**Version:** `0.3.0`
 
 ---
 

@@ -63,10 +63,15 @@ docker compose up db -d
 # 4. Install Python dependencies (uv-managed virtualenv)
 uv sync
 
-# 5. Run the API
+# 5. Ingest the NIST SP 800-53 Rev 5 catalog (one-off, ~1 minute)
+uv run python scripts/ingest.py
+# Loads the OSCAL JSON, embeds 1,014 controls + enhancements via OpenAI,
+# and upserts everything into the `controls` table. Idempotent.
+
+# 6. Run the API
 uv run uvicorn app.main:app --reload
 
-# 6. Smoke-test the health endpoint
+# 7. Smoke-test the health endpoint
 curl http://localhost:8000/health
 # -> {"status":"ok"}
 ```
