@@ -1,12 +1,21 @@
 # Backend CI: lint (ruff), type-check (mypy --strict), and run pytest.
-# Runs on every push and pull request. No DB / external API calls — those
-# arrive in later packets and will need their own service containers / secrets.
+# Runs when backend sources or this workflow change.
 
 name: Backend CI
 
 on:
   push:
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
   pull_request:
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+
+defaults:
+  run:
+    working-directory: backend
 
 jobs:
   lint-typecheck-test:
@@ -33,7 +42,9 @@ jobs:
         run: uv run ruff check .
 
       - name: Type check (mypy --strict)
-        run: uv run mypy --strict app/
+        run: uv run mypy --strict app/ scripts/ tests/
 
       - name: Tests (pytest)
+        env:
+          ISO_AUDIT_TESTING: "1"
         run: uv run pytest -v

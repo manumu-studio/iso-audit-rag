@@ -1,0 +1,25 @@
+#!/usr/bin/env sh
+# Full checks before push — aligned with CI workflows.
+
+set -e
+
+ROOT="$(git rev-parse --show-toplevel)"
+
+echo "husky pre-push: frontend"
+cd "$ROOT/frontend"
+if [ ! -d node_modules ]; then
+  echo "error: frontend/node_modules missing. Run: cd frontend && npm install"
+  exit 1
+fi
+npm run lint
+npx tsc --noEmit
+npm run build
+
+echo "husky pre-push: backend"
+cd "$ROOT/backend"
+uv run ruff check .
+uv run ruff format --check .
+uv run mypy --strict app/ tests/
+uv run pytest -v
+
+echo "husky pre-push: ok"

@@ -1,0 +1,19 @@
+#!/usr/bin/env sh
+# Fast checks before commit: frontend lint + typecheck, backend ruff + mypy.
+
+set -e
+
+ROOT="$(git rev-parse --show-toplevel)"
+
+echo "husky pre-commit: frontend (npm)"
+cd "$ROOT/frontend"
+npx tsc --noEmit
+npm run lint
+
+echo "husky pre-commit: backend (uv)"
+cd "$ROOT/backend"
+uv run ruff check .
+uv run ruff format --check .
+uv run mypy --strict app/ tests/
+
+echo "husky pre-commit: ok"

@@ -1,8 +1,7 @@
 [project]
 name = "iso-audit-rag"
-version = "0.1.0"
+version = "0.6.0"
 description = "RAG-powered API for querying NIST SP 800-53 compliance controls with natural language."
-readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "fastapi>=0.115.0",
@@ -12,6 +11,8 @@ dependencies = [
     "openai>=1.54.0",
     "anthropic>=0.39.0",
     "httpx>=0.27.0",
+    "pymupdf>=1.25.0",
+    "python-multipart>=0.0.27",
 ]
 
 [dependency-groups]
@@ -35,6 +36,14 @@ known-first-party = ["app"]
 [tool.mypy]
 strict = true
 plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = "fitz.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "asyncpg.*"
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

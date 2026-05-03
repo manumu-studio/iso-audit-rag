@@ -131,6 +131,47 @@ Use the OSCAL JSON catalog. Each control is already a structured object with ID,
 - Eliminates the biggest fragility risk in the pipeline (PDF layout parsing).
 - In the interview: "I chose the machine-readable source because fighting PDF layout isn't engineering — it's janitorial work. The architecture supports PDFs if a client's document isn't available in structured form."
 
+## ADR-009 -- Tailwind 4 + PostCSS (no component library)
+
+### Context
+The chat UI needs a Claude-style dark aesthetic. Options: Tailwind + component library (shadcn, MUI), Tailwind-only, or CSS modules.
+
+### Decision
+Tailwind 4 with `@tailwindcss/postcss`. No component library. Custom utility classes give full control over the design.
+
+### Consequences
+- Claude-style design is custom enough that a library would fight more than help.
+- Tailwind 4's native PostCSS plugin requires Node 20+ (reflected in `engines` and CI).
+- Dark-only design (no toggle) — simpler, matches the Claude aesthetic.
+
+## ADR-010 -- Monorepo layout (backend/ + frontend/)
+
+### Context
+Initially the backend lived at the repo root (`app/`, `tests/`, `pyproject.toml`). Adding `frontend/` created an asymmetric layout.
+
+### Decision
+Restructure into `backend/` and `frontend/` directories at root. Infrastructure configs (`systemd/`, `.github/`) stay at root.
+
+### Consequences
+- Symmetric layout, easier to reason about path-filtered CI.
+- Backend CI already pointed to `backend/**` — no CI change needed.
+- All deployment scripts, systemd paths, and working-directory defaults updated.
+- Every `uv run` command now starts from `backend/`.
+
+## ADR-011 -- Husky v9 with Golden Goose Rule
+
+### Context
+Needed pre-commit quality gates matching CI, plus protection against leaking internal workflow references (PACKET-XX, TASK-NNN, Cursor, Claude Code) into public git history.
+
+### Decision
+Husky v9 with three hooks: pre-commit (lint + typecheck), commit-msg (conventional format + banned patterns), pre-push (full build + tests). Pattern ported from helical-bio-explorer.
+
+### Consequences
+- Commits are blocked unless they pass lint, typecheck, and use conventional format.
+- The "Golden Goose Rule" prevents internal tooling references from reaching public commits.
+- Pre-push runs the full build, catching SSR issues before they hit CI.
+- Root `package.json` exists solely for husky — no app logic.
+
 ## Out of scope
 
 - User authentication

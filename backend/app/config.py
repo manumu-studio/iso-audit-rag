@@ -5,17 +5,15 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Application configuration loaded from environment variables / `.env`.
-
-    All secrets default to empty strings so local boot and the `/health`
-    endpoint work without any credentials configured. Later packets that
-    actually call OpenAI / Anthropic / Postgres will fail loudly if their
-    respective values are still blank.
-    """
+    """Application configuration loaded from environment variables / .env."""
 
     database_url: str = "postgresql://postgres:postgres@localhost:5432/iso_audit"
+    max_upload_size_mb: int = 20
     openai_api_key: str = ""
     anthropic_api_key: str = ""
+    anthropic_model: str = "claude-sonnet-4-6"
+    search_top_k: int = 10
+    rrf_k: int = 60
     environment: Literal["dev", "prod"] = "dev"
     log_level: str = "INFO"
 
