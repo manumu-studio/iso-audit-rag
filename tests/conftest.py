@@ -1,10 +1,13 @@
-# Shared pytest fixtures: in-process async HTTP client against the FastAPI app.
+# Shared pytest fixtures: ASGI client and test-only env flags (no real Postgres in CI).
+import os
 from collections.abc import AsyncIterator
 
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 
-from app.main import app
+os.environ["ISO_AUDIT_TESTING"] = "1"
+
+from app.main import app  # noqa: E402
 
 
 @pytest_asyncio.fixture

@@ -16,8 +16,8 @@ graph TD
   subgraph retrieval["Retrieval Pipeline (runtime)"]
     Query[User question] --> QEmbed[Query embedding]
     QEmbed --> Search[Hybrid search: BM25 + vector]
-    Search --> Rerank[Reranker]
-    Rerank --> Context[Top-K chunks + metadata]
+    Search --> RRF[RRF fusion]
+    RRF --> Context[Top-K controls + metadata]
     Context --> LLM[Claude]
     LLM --> Answer[Answer + clause citations]
   end
@@ -61,6 +61,11 @@ uv run uvicorn app.main:app --reload
 # 6. Smoke-test the health endpoint
 curl http://localhost:8000/health
 # -> {"status":"ok"}
+
+# 7. Ask a compliance question (requires ingested controls + API keys)
+curl -s -X POST http://localhost:8000/ask \
+  -H "Content-Type: application/json" \
+  -d '{"question": "What is AC-2?"}'
 ```
 
 ## Development
@@ -73,7 +78,7 @@ uv run pytest -v
 uv run ruff check .
 
 # Strict type-check
-uv run mypy --strict app/
+uv run mypy --strict app/ tests/
 ```
 
 ## Data Source
