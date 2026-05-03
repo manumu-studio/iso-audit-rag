@@ -1,0 +1,26 @@
+# Local development database: Postgres 17 + pgvector.
+# The FastAPI app itself runs on the host via `uv run uvicorn` —
+# Docker is intentionally only used for the database in dev.
+
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    container_name: iso-audit-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: iso_audit
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:

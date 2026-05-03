@@ -1,0 +1,70 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Local agent / editor folders
+.claude/
+.cursor/
+.playwright-mcp/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+.turbo/
+*.log
+
+# Env
+.env
+.env.local
+.env.*.local
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Private / internal (never committed)
+CONTINUATION_PROMPT_NEXT_SESSION.md
+DEVELOPMENT_PLAYBOOK.md
+CLAUDE.md
+.cursorrules
+
+# Internal documentation (strategic, prep, audit, coaching)
+docs/build-packets/
+docs/build-packet-reports/
+docs/cursor-tasks/
+docs/cursor-task-reports/
+docs/chat-sessions/
+docs/standards/
+docs/learning/
+docs/superpowers/
+docs/COMMANDS-CHEATSHEET.md
+
+# Interview prep & research (private — DECISIONS.md stays public)
+docs/research/*
+!docs/research/DECISIONS.md
+
+# Coverage
+coverage/
+.coverage
+htmlcov/

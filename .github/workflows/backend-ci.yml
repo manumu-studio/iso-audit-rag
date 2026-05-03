@@ -1,0 +1,39 @@
+# Backend CI: lint (ruff), type-check (mypy --strict), and run pytest.
+# Runs on every push and pull request. No DB / external API calls — those
+# arrive in later packets and will need their own service containers / secrets.
+
+name: Backend CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint-typecheck-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Lint (ruff)
+        run: uv run ruff check .
+
+      - name: Type check (mypy --strict)
+        run: uv run mypy --strict app/
+
+      - name: Tests (pytest)
+        run: uv run pytest -v
