@@ -91,7 +91,7 @@ uv run pytest -v
 uv run ruff check .
 
 # Strict type-check
-uv run mypy --strict app/ tests/
+uv run mypy --strict app/ scripts/ tests/
 ```
 
 ### Download sample compliance PDFs
@@ -105,6 +105,10 @@ uv run python scripts/download-sample-pdfs.py
 ```bash
 curl -X POST http://localhost:8000/upload -F "file=@data/sample-pdfs/NIST-CSF-2.0.pdf"
 ```
+
+## Production deployment
+
+The backend is designed to run behind Nginx on Ubuntu with systemd and to deploy from GitHub Actions after CI passes on `main`. See **[docs/deployment/RUNBOOK.md](docs/deployment/RUNBOOK.md)** for EC2, DNS, Neon, OIDC, and validation steps.
 
 ## Data Source
 

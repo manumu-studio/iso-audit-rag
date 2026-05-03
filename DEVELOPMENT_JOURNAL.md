@@ -10,3 +10,4 @@ documentation under [`docs/pull-requests/`](docs/pull-requests/).
 | 2 | 2026-05-03 | Feature | `0.2.0` | Ingestion pipeline | [ENTRY-02](docs/journal/ENTRY-02-ingestion-pipeline.md) | [PR-0.2.0](docs/pull-requests/PR-0.2.0-ingestion-pipeline.md) |
 | 3 | 2026-05-03 | Feature | `0.3.0` | PDF upload pipeline | [ENTRY-03](docs/journal/ENTRY-03-pdf-upload-pipeline.md) | [PR-0.3.0](docs/pull-requests/PR-0.3.0-pdf-upload-pipeline.md) |
 | 4 | 2026-05-03 | Feature | `0.4.0` | Retrieval pipeline and `/ask` API | [ENTRY-04](docs/journal/ENTRY-04-retrieval-and-ask-api.md) | [PR-0.4.0](docs/pull-requests/PR-0.4.0-retrieval-and-ask-api.md) |
+| 5 | 2026-05-03 | Infrastructure | `0.5.0` | Production hosting scaffolding | [ENTRY-05](docs/journal/ENTRY-02-deployment-hosting.md) | [PR-0.5.0](docs/pull-requests/PR-0.5.0-deployment-hosting.md) |
