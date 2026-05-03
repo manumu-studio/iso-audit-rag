@@ -1,9 +1,9 @@
--- Application schema for the `controls` table that backs hybrid retrieval
--- (BM25 via tsvector + cosine via pgvector) over the NIST SP 800-53 catalog.
+-- Application schema for iso-audit-rag: NIST controls and uploaded PDF chunks.
 -- Idempotent: safe to run on every app boot.
 
 CREATE EXTENSION IF NOT EXISTS vector;
 
+-- OSCAL-derived control chunks for hybrid retrieval (BM25 + dense vectors).
 CREATE TABLE IF NOT EXISTS controls (
     id              TEXT PRIMARY KEY,                  -- e.g. "AC-2", "AC-2(1)"
     title           TEXT NOT NULL,
@@ -19,3 +19,26 @@ CREATE INDEX IF NOT EXISTS idx_controls_embedding
 
 CREATE INDEX IF NOT EXISTS idx_controls_search
     ON controls USING gin (search_vector);
+
+-- Uploaded PDF chunks for document-level RAG retrieval.
+-- Each row is one chunk from one page of an uploaded PDF.
+CREATE TABLE IF NOT EXISTS documents (
+    id              TEXT PRIMARY KEY,
+    filename        TEXT NOT NULL,
+    page_number     INTEGER NOT NULL,
+    chunk_index     INTEGER NOT NULL,
+    content         TEXT NOT NULL,
+    search_vector   tsvector,
+    embedding       vector(1536),
+    metadata        JSONB DEFAULT '{}'::jsonb,
+    created_at      TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_documents_embedding
+    ON documents USING hnsw (embedding vector_cosine_ops);
+
+CREATE INDEX IF NOT EXISTS idx_documents_search
+    ON documents USING gin (search_vector);
+
+CREATE INDEX IF NOT EXISTS idx_documents_filename
+    ON documents (filename);

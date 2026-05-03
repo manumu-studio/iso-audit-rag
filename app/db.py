@@ -1,4 +1,5 @@
 # asyncpg connection pool lifecycle and idempotent schema bootstrap.
+from collections.abc import Iterator
 from pathlib import Path
 
 import asyncpg
@@ -8,6 +9,20 @@ _SCHEMA_PATH: Path = (
 )
 
 _pool: asyncpg.Pool | None = None
+
+
+def _sql_statements(script: str) -> Iterator[str]:
+    """Yield non-empty SQL statements from a script (line comments skipped)."""
+    buf: list[str] = []
+    for line in script.splitlines():
+        if line.strip().startswith("--") and not buf:
+            continue
+        buf.append(line)
+        if line.rstrip().endswith(";"):
+            stmt = "\n".join(buf).strip().rstrip(";").strip()
+            buf.clear()
+            if stmt:
+                yield stmt
 
 
 async def init_pool(dsn: str) -> asyncpg.Pool:
@@ -40,8 +55,10 @@ async def create_schema(pool: asyncpg.Pool) -> None:
     """Apply `scripts/create-schema.sql` against the given pool.
 
     The SQL script is fully idempotent (CREATE ... IF NOT EXISTS) so this
-    runs safely on every application boot.
+    runs safely on every application boot. Statements are executed one at a
+    time because asyncpg does not support multi-statement strings.
     """
     sql = _SCHEMA_PATH.read_text(encoding="utf-8")
     async with pool.acquire() as conn:
-        await conn.execute(sql)
+        for statement in _sql_statements(sql):
+            await conn.execute(statement)

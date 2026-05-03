@@ -6,23 +6,31 @@ RAG-powered API for querying NIST SP 800-53 compliance controls with natural lan
 
 ```mermaid
 graph TD
-  subgraph ingestion["Ingestion Pipeline (offline)"]
+  subgraph ingestion["Ingestion: OSCAL Controls (offline)"]
     OSCAL[OSCAL JSON] --> Parser[JSON parser]
     Parser --> Chunker[Clause-aware chunker]
-    Chunker --> Embedder[Embedding model]
-    Embedder --> Store[(pgvector)]
+    Chunker --> Embedder1[Embedding model]
+    Embedder1 --> Controls[(controls table)]
+  end
+
+  subgraph upload["Ingestion: PDF Upload (runtime)"]
+    PDF[PDF file] --> Extract[PyMuPDF extractor]
+    Extract --> PageChunk[Page-based chunker]
+    PageChunk --> Embedder2[Embedding model]
+    Embedder2 --> Documents[(documents table)]
   end
 
   subgraph retrieval["Retrieval Pipeline (runtime)"]
     Query[User question] --> QEmbed[Query embedding]
     QEmbed --> Search[Hybrid search: BM25 + vector]
-    Search --> Rerank[Reranker]
-    Rerank --> Context[Top-K chunks + metadata]
+    Search --> RRF[RRF fusion]
+    RRF --> Context[Top-K chunks + metadata]
     Context --> LLM[Claude]
-    LLM --> Answer[Answer + clause citations]
+    LLM --> Answer[Answer + citations]
   end
 
-  Store --> Search
+  Controls --> Search
+  Documents --> Search
 ```
 
 ## Tech Stack
@@ -79,6 +87,18 @@ uv run ruff check .
 
 # Strict type-check
 uv run mypy --strict app/
+```
+
+### Download sample compliance PDFs
+
+```bash
+uv run python scripts/download-sample-pdfs.py
+```
+
+### Upload a PDF to the system
+
+```bash
+curl -X POST http://localhost:8000/upload -F "file=@data/sample-pdfs/NIST-CSF-2.0.pdf"
 ```
 
 ## Data Source

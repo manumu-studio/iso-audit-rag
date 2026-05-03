@@ -68,3 +68,6 @@ docs/research/*
 coverage/
 .coverage
 htmlcov/
+
+# Sample PDFs (downloaded on demand)
+data/sample-pdfs/
