@@ -8,15 +8,17 @@ FIRST_LINE=$(head -n 1 "$COMMIT_MSG_FILE")
 
 # ─── Format check: type(scope): description ───
 
-if ! echo "$FIRST_LINE" | grep -qE '^(feat|fix|chore|refactor|test|docs|style|perf|ci|build|revert)\([a-z0-9-]+\): .{3,}'; then
+if ! echo "$FIRST_LINE" | grep -qE '^(feat|fix|chore|refactor|test|docs|style|perf|ci|build|revert)\([a-z0-9][a-z0-9.-]*\): .{3,}'; then
   echo ""
   echo "❌ Invalid commit message format."
   echo ""
   echo "Expected: type(scope): description"
   echo "Types: feat | fix | chore | refactor | test | docs | style | perf | ci | build | revert"
+  echo "Scope: lowercase slug or semver (e.g. landing, chat, v0.7.0)"
   echo ""
   echo "Example:"
   echo "  feat(chat): add citation pill rendering for bracket references"
+  echo "  feat(v0.7.0): landing page and chat route split"
   echo ""
   exit 1
 fi

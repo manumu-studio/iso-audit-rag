@@ -31,6 +31,15 @@ export const UploadResponseSchema = z.object({
   chunks_created: z.number(),
 });
 
+export const StreamTokenPayloadSchema = z.object({
+  text: z.string(),
+});
+
+export const StreamDoneSchema = z.object({
+  citations: z.array(CitationSchema),
+  meta: MetaInfoSchema,
+});
+
 export const ApiErrorSchema = z.object({
   detail: z.string(),
 });
