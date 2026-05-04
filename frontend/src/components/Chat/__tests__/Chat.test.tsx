@@ -41,6 +41,14 @@ function mockAskSuccess(answer = "This is the answer."): void {
   });
 }
 
+function renderChat(): void {
+  render(
+    <div className="chat-shell">
+      <Chat />
+    </div>,
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /*  Suite                                                               */
 /* ------------------------------------------------------------------ */
@@ -55,7 +63,7 @@ describe("Chat", () => {
   });
 
   it("renders the message input textarea and send button", () => {
-    render(<Chat />);
+    renderChat();
 
     expect(screen.getByPlaceholderText("Ask about compliance controls...")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Send" })).toBeInTheDocument();
@@ -65,7 +73,7 @@ describe("Chat", () => {
     const user = userEvent.setup();
     mockAskSuccess("Access control requires...");
 
-    render(<Chat />);
+    renderChat();
 
     const textarea = screen.getByPlaceholderText("Ask about compliance controls...");
     const sendButton = screen.getByRole("button", { name: "Send" });
@@ -90,7 +98,7 @@ describe("Chat", () => {
     // Never-resolving promise to keep loading state
     vi.mocked(askQuestion).mockReturnValueOnce(new Promise(() => {}));
 
-    render(<Chat />);
+    renderChat();
 
     const textarea = screen.getByPlaceholderText("Ask about compliance controls...");
     await user.type(textarea, "Test question");
@@ -110,7 +118,7 @@ describe("Chat", () => {
       new ApiClientError("Request failed", 500, "Backend unavailable"),
     );
 
-    render(<Chat />);
+    renderChat();
 
     const textarea = screen.getByPlaceholderText("Ask about compliance controls...");
     await user.type(textarea, "Failing question");

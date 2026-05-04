@@ -1,19 +1,26 @@
-// Header upload control with PDF-only picker and upload progress feedback.
+// Header upload control — `composer` variant matches ChatGPT attach slot (toolbar).
 "use client";
 
 import { useRef } from "react";
 import type { UploadButtonProps } from "./UploadButton.types";
 import { useUpload } from "./useUpload";
 
-export function UploadButton({ chatState, showToast, onUploadProcessed }: UploadButtonProps) {
+export function UploadButton({
+  chatState,
+  showToast,
+  onUploadProcessed,
+  variant = "header",
+}: UploadButtonProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const { uploadState, startUpload } = useUpload(showToast, onUploadProcessed);
 
   const isQuestionLoading = chatState.status === "loading";
   const isUploadBusy = uploadState.status === "uploading";
 
+  const isComposer = variant === "composer";
+
   return (
-    <div className="flex flex-col items-end gap-2">
+    <div className={isComposer ? "flex flex-col items-start gap-1.5" : "flex flex-col items-end gap-2"}>
       <input
         ref={inputRef}
         type="file"
@@ -29,6 +36,21 @@ export function UploadButton({ chatState, showToast, onUploadProcessed }: Upload
         }}
       />
 
+      {isUploadBusy ? (
+        <div className={isComposer ? "w-[min(280px,70vw)]" : "w-40"}>
+          <div className="mb-1 flex justify-between text-[11px] text-chatFg-tertiary">
+            <span className="truncate">{uploadState.filename}</span>
+            <span>{`${String(uploadState.progress)}%`}</span>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-black/40">
+            <div
+              className="h-full rounded-full bg-chatAccent transition-[width] duration-150"
+              style={{ width: `${String(uploadState.progress)}%` }}
+            />
+          </div>
+        </div>
+      ) : null}
+
       <button
         type="button"
         title="Upload PDF document"
@@ -36,10 +58,14 @@ export function UploadButton({ chatState, showToast, onUploadProcessed }: Upload
         onClick={() => {
           inputRef.current?.click();
         }}
-        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-surface text-lg text-foreground transition hover:border-primary/40 hover:bg-surface/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50"
+        className={
+          isComposer
+            ? "grid h-9 w-9 shrink-0 place-items-center rounded-full text-chatFg-secondary transition-colors hover:bg-accent/[0.12] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary/35 disabled:cursor-not-allowed disabled:opacity-40"
+            : "inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-surface text-lg text-foreground transition hover:border-accent/35 hover:bg-surface/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent/45 disabled:cursor-not-allowed disabled:opacity-50"
+        }
       >
         {isUploadBusy ? (
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-chatFg-quaternary border-t-chatFg" />
         ) : (
           <svg
             aria-hidden="true"
@@ -55,21 +81,6 @@ export function UploadButton({ chatState, showToast, onUploadProcessed }: Upload
           </svg>
         )}
       </button>
-
-      {isUploadBusy ? (
-        <div className="w-40">
-          <div className="mb-1 flex justify-between text-[11px] text-muted">
-            <span className="truncate">{uploadState.filename}</span>
-            <span>{`${String(uploadState.progress)}%`}</span>
-          </div>
-          <div className="h-1.5 overflow-hidden rounded-full bg-black/30">
-            <div
-              className="h-full rounded-full bg-primary transition-[width] duration-150"
-              style={{ width: `${String(uploadState.progress)}%` }}
-            />
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }

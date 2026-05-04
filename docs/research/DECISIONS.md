@@ -6,16 +6,16 @@
 |-------|--------|-----------|
 | Runtime | Python 3.13, uv | Modern tooling, fast installs, current Python. |
 | Backend | FastAPI + Pydantic v2 + Pydantic Settings | Python is the ecosystem for RAG tooling. FastAPI gives typed boundaries. |
-| Project structure | Flat `app/` | Single-service demo, FastAPI convention, minimal nesting. |
+| Project structure | Monorepo: `backend/` + `frontend/` | Symmetric layout, path-filtered CI (see ADR-010). |
 | Database (prod) | Neon (PostgreSQL + pgvector) | Managed, pgvector built-in, already known from helical-bio-explorer. |
 | Database (dev) | Docker Compose PostgreSQL + pgvector | Local dev with `docker compose up db`. Full-stack mode via `profiles: [full]`. |
 | DB driver | Raw asyncpg | One table, 3 query patterns. ORM is ceremony without benefit at this scale. |
-| Data source | NIST SP 800-53 Rev 5 (OSCAL JSON) | Machine-readable, structured, committed in `data/`. No PDF parsing needed. |
+| Data source | NIST SP 800-53 Rev 5 (OSCAL JSON) + PDF upload | OSCAL for controls (offline), PDF upload for runtime documents (PyMuPDF). |
 | Embedding model | OpenAI text-embedding-3-small | 1536 dimensions, cheap ($0.02/1M tokens), avoids PyTorch dependency. |
 | LLM | Claude claude-sonnet-4-6 via raw Anthropic SDK | Configurable via settings. No LangChain — direct API control. |
 | Search | Hybrid: BM25 (tsvector) + vector (pgvector) + RRF | Handles exact ID queries and semantic queries. |
 | Frontend | Next.js chat UI (single view, no history) | Claude-style interface, deployed on Vercel. |
-| Testing | pytest + httpx (async) | 4 core tests: chunker, RRF, ingestion integration, `/ask` endpoint. |
+| Testing | pytest + httpx (backend), Vitest + RTL (frontend) | 30 backend + 15 frontend = 45 tests total. |
 | Deployment | EC2 (Nginx + systemd + uv), OIDC + SSM CI/CD | Proven pattern from helical-bio-explorer. |
 | CI | Split GitHub Actions (backend-ci, frontend-ci, backend-deploy) | Path-filtered triggers, ported from helical. |
 
