@@ -48,3 +48,20 @@ class AskResponse(BaseModel):
     answer: str
     citations: list[Citation]
     meta: MetaInfo
+
+
+class StreamTokenEvent(BaseModel):
+    """Payload for an SSE `token` event (one Claude text delta)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    text: str
+
+
+class StreamDoneEvent(BaseModel):
+    """Payload for an SSE `done` event after the full answer has streamed."""
+
+    model_config = ConfigDict(frozen=True)
+
+    citations: list[Citation]
+    meta: MetaInfo

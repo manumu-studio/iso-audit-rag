@@ -15,6 +15,18 @@ function jsonResponse(body: unknown, status = 200): Response {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Helpers                                                             */
+/* ------------------------------------------------------------------ */
+
+function getFetchCall(index = 0): { url: unknown; init: RequestInit } {
+  const call = vi.mocked(fetch).mock.calls[index];
+  if (!call) throw new Error(`No fetch call at index ${index}`);
+  const [url, init] = call;
+  if (!init) throw new Error("Fetch called without init");
+  return { url, init };
+}
+
+/* ------------------------------------------------------------------ */
 /*  Suite                                                               */
 /* ------------------------------------------------------------------ */
 
@@ -26,7 +38,6 @@ describe("API client", () => {
     process.env.NEXT_PUBLIC_API_URL = "http://localhost:8000";
 
     vi.stubGlobal("fetch", vi.fn());
-    // Ensure XMLHttpRequest is undefined so uploadDocument uses fetchApi path
     vi.stubGlobal("XMLHttpRequest", undefined);
   });
 
@@ -55,11 +66,12 @@ describe("API client", () => {
     const result = await askQuestion("What is AC-01?");
 
     expect(fetch).toHaveBeenCalledOnce();
-    const [url, init] = vi.mocked(fetch).mock.calls[0] ?? [];
+    const { url, init } = getFetchCall();
     expect(url).toBe("http://localhost:8000/ask");
-    expect((init as RequestInit).method).toBe("POST");
+    expect(init.method).toBe("POST");
 
-    const sentBody: unknown = JSON.parse((init as RequestInit).body as string);
+    if (typeof init.body !== "string") throw new Error("Expected string body");
+    const sentBody: unknown = JSON.parse(init.body);
     expect(sentBody).toEqual({ question: "What is AC-01?" });
 
     expect(result.answer).toBe("Access controls require...");
@@ -80,13 +92,13 @@ describe("API client", () => {
     const result = await uploadDocument(file);
 
     expect(fetch).toHaveBeenCalledOnce();
-    const [url, init] = vi.mocked(fetch).mock.calls[0] ?? [];
+    const { url, init } = getFetchCall();
     expect(url).toBe("http://localhost:8000/upload");
-    expect((init as RequestInit).method).toBe("POST");
+    expect(init.method).toBe("POST");
 
-    const body = (init as RequestInit).body;
-    expect(body).toBeInstanceOf(FormData);
-    expect((body as FormData).get("file")).toBeInstanceOf(File);
+    expect(init.body).toBeInstanceOf(FormData);
+    if (!(init.body instanceof FormData)) throw new Error("Expected FormData");
+    expect(init.body.get("file")).toBeInstanceOf(File);
 
     expect(result.document_id).toBe("550e8400-e29b-41d4-a716-446655440000");
     expect(result.chunks_created).toBe(12);
@@ -98,9 +110,9 @@ describe("API client", () => {
     const result = await checkHealth();
 
     expect(fetch).toHaveBeenCalledOnce();
-    const [url, init] = vi.mocked(fetch).mock.calls[0] ?? [];
+    const { url, init } = getFetchCall();
     expect(url).toBe("http://localhost:8000/health");
-    expect((init as RequestInit).method).toBe("GET");
+    expect(init.method).toBe("GET");
 
     expect(result.status).toBe("ok");
   });
@@ -112,17 +124,18 @@ describe("API client", () => {
 
     await expect(checkHealth()).rejects.toThrow(ApiClientError);
 
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({ detail: "Internal failure" }, 500),
+    );
+
     try {
-      vi.mocked(fetch).mockResolvedValueOnce(
-        jsonResponse({ detail: "Internal failure" }, 500),
-      );
       await checkHealth();
       expect.unreachable("Should have thrown");
     } catch (error: unknown) {
       expect(error).toBeInstanceOf(ApiClientError);
-      const apiError = error as ApiClientError;
-      expect(apiError.status).toBe(500);
-      expect(apiError.detail).toBe("Internal failure");
+      if (!(error instanceof ApiClientError)) throw error;
+      expect(error.status).toBe(500);
+      expect(error.detail).toBe("Internal failure");
     }
   });
 

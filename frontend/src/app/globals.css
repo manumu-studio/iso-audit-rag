@@ -141,3 +141,23 @@ body [role="button"]:not([aria-disabled="true"]) {
 .animate-chat-dot {
   animation: chat-dot-pulse 1.2s ease-in-out infinite;
 }
+
+@keyframes stream-caret-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.stream-caret-blink {
+  animation: stream-caret-blink 1s step-end infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stream-caret-blink {
+    animation: none;
+  }
+}

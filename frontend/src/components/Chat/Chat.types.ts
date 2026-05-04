@@ -7,10 +7,13 @@ export interface Message {
   content: string;
   citations?: Citation[];
   meta?: MetaInfo;
+  /** True while SSE tokens are still arriving for this assistant turn. */
+  streaming?: boolean;
   timestamp: Date;
 }
 
 export type ChatState =
   | { status: "idle" }
   | { status: "loading" }
+  | { status: "streaming" }
   | { status: "error"; error: string };

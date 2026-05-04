@@ -27,7 +27,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(
     title="iso-audit-rag",
-    version="0.7.0",
+    version="0.8.0",
     lifespan=lifespan,
 )
 

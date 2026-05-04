@@ -19,3 +19,10 @@ export type ApiError = z.infer<typeof ApiErrorSchema>;
 export interface AskRequest {
   question: string;
 }
+
+/** Callbacks for `askQuestionStream` (SSE token/done/error). */
+export interface AskQuestionStreamCallbacks {
+  onToken: (text: string) => void;
+  onDone: (citations: Citation[], meta: MetaInfo) => void;
+  onError: (message: string) => void;
+}

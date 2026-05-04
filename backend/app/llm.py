@@ -1,4 +1,6 @@
 # Anthropic Claude client for compliance answers grounded in retrieved controls.
+from collections.abc import AsyncIterator
+
 from anthropic import AsyncAnthropic
 
 from app.config import settings
@@ -50,3 +52,22 @@ async def generate_answer(question: str, search_results: list[SearchResult]) -> 
         if block.type == "text":
             parts.append(block.text)
     return "".join(parts)
+
+
+async def stream_answer(
+    question: str,
+    search_results: list[SearchResult],
+) -> AsyncIterator[str]:
+    """Yield text deltas from Claude's streaming response."""
+    client = AsyncAnthropic(api_key=settings.anthropic_api_key or None)
+    context = format_context(search_results)
+    user_content = f"{context}\n\n{question}"
+
+    async with client.messages.stream(
+        model=settings.anthropic_model,
+        max_tokens=1024,
+        system=SYSTEM_PROMPT,
+        messages=[{"role": "user", "content": user_content}],
+    ) as stream:
+        async for text in stream.text_stream:
+            yield text
