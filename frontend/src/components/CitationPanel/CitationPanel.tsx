@@ -45,14 +45,14 @@ export function CitationPanel({ citations }: CitationPanelProps) {
                   className="rounded-lg border border-chatBorder-light bg-chat-mainStrip/80 px-3 py-2 transition"
                 >
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
-                    <div className="font-chatMono text-sm font-semibold text-primary">
+                    <div className="font-chatMono text-sm font-semibold text-[#84a9ce]">
                       {citation.control_id}
                     </div>
                     <div className="text-xs text-chatFg-tertiary">{`${String(percent)}% match`}</div>
                   </div>
                   <div className="mt-1 text-sm font-medium text-chatFg">{citation.title}</div>
                   <div className="mt-1 text-xs text-chatFg-tertiary">{citation.family}</div>
-                  <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-primary/25">
+                  <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-[#84a9ce]/25">
                     <div
                       className="h-full rounded-full bg-accent"
                       style={{

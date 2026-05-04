@@ -11,7 +11,7 @@ Upload any compliance standard, ask in plain English, and get answers with exact
 ---
 
 <p align="center">
-  <img src="frontend/public/assets/landing-hero.png" alt="ISO Audit RAG — landing page with constellation canvas" width="800" />
+  <img src="frontend/public/assets/landing-hero.webp" alt="ISO Audit RAG — landing page with constellation canvas" width="800" />
 </p>
 
 ---
@@ -27,7 +27,19 @@ The chat UI lets compliance teams ask natural-language questions and immediately
 Calibre-inspired dark theme with constellation canvas animation, gradient hero, feature showcase, how-it-works pipeline, and tech badges.
 
 <p align="center">
-  <img src="frontend/public/assets/landing-full.png" alt="Landing page — full scroll" width="400" />
+  <img src="frontend/public/assets/landing-sections/landing-section1.webp" alt="Hero — constellation canvas, CTA, and tech badges" width="800" />
+</p>
+
+<p align="center">
+  <img src="frontend/public/assets/landing-sections/landing-section2.webp" alt="Features — hybrid search, exact citations, PDF upload, pre-loaded controls" width="800" />
+</p>
+
+<p align="center">
+  <img src="frontend/public/assets/landing-sections/landing-section3.webp" alt="How it works — upload, ask, get answers" width="800" />
+</p>
+
+<p align="center">
+  <img src="frontend/public/assets/landing-sections/landing-section4.webp" alt="CTA footer and site footer with branding" width="800" />
 </p>
 
 ## Chat UI
@@ -35,7 +47,11 @@ Calibre-inspired dark theme with constellation canvas animation, gradient hero, 
 Sidebar navigation, suggested prompts, PDF upload with progress, citation pills that expand to a detail panel, and streaming responses with a typing caret.
 
 <p align="center">
-  <img src="frontend/public/assets/chat-ui.png" alt="Chat UI — empty state with suggested prompts" width="800" />
+  <img src="frontend/public/assets/chat-ui-views/chat-ui1.webp" alt="Chat UI — empty state with suggested prompts" width="800" />
+</p>
+
+<p align="center">
+  <img src="frontend/public/assets/chat-ui-views/chat-ui2.webp" alt="Chat UI — AC-2 Account Management answer with citations" width="800" />
 </p>
 
 ## Architecture

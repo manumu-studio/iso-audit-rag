@@ -76,6 +76,11 @@ export default {
         "chat-composer": "var(--chat-shadow-composer)",
         "cal-cta": "0 4px 20px rgba(227, 242, 255, 0.3)",
         "cal-cta-hover": "0 8px 30px rgba(227, 242, 255, 0.5)",
+        /** Layered bloom so the large hero CTA matches nav glow on lighter mid-gradient. */
+        "cal-cta-hero":
+          "0 4px 22px rgba(227, 242, 255, 0.42), 0 0 44px rgba(227, 242, 255, 0.32)",
+        "cal-cta-hero-hover":
+          "0 8px 36px rgba(227, 242, 255, 0.55), 0 0 60px rgba(227, 242, 255, 0.38)",
         "cal-cta-lg": "0 8px 42px rgba(227, 242, 255, 0.18)",
       },
     },

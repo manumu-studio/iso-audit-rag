@@ -39,7 +39,7 @@ export function FeatureShowcase({ className }: FeatureShowcaseProps) {
   return (
     <section
       id="features"
-      className={`border-t border-white/10 px-4 py-16 md:px-6 md:py-32 ${className ?? ""}`}
+      className={`bg-background px-4 py-16 md:px-6 md:py-32 ${className ?? ""}`}
     >
       <div className="mx-auto max-w-[1000px]">
         <h2 className="text-center text-3xl font-light text-foreground md:text-4xl">Features</h2>
