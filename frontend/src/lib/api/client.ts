@@ -3,9 +3,12 @@ import {
   ApiErrorSchema,
   AskResponseSchema,
   HealthResponseSchema,
+  StreamDoneSchema,
+  StreamTokenPayloadSchema,
   UploadResponseSchema,
 } from "./schemas";
-import type { AskResponse, HealthResponse, UploadResponse } from "./types";
+import { parseSSE } from "./sse";
+import type { AskQuestionStreamCallbacks, AskResponse, HealthResponse, UploadResponse } from "./types";
 
 const DEFAULT_API_BASE = "http://localhost:8000";
 
@@ -187,4 +190,95 @@ export async function checkHealth(): Promise<HealthResponse> {
   const response = await fetchApi("/health");
   const rawUnknown: unknown = await response.json();
   return HealthResponseSchema.parse(rawUnknown);
+}
+
+/**
+ * Stream POST /ask/stream as SSE; invokes callbacks per event. Resolves when `done` is received.
+ */
+export async function askQuestionStream(
+  question: string,
+  callbacks: AskQuestionStreamCallbacks,
+  signal?: AbortSignal,
+): Promise<void> {
+  const url = `${getApiBaseUrl()}/ask/stream`;
+  const headers = new Headers();
+  headers.set("Content-Type", "application/json");
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ question } satisfies { question: string }),
+    ...(signal !== undefined ? { signal } : {}),
+  });
+
+  if (!response.ok) {
+    const detail = await parseErrorDetail(response);
+    throw new ApiClientError(
+      `Request failed with status ${String(response.status)}`,
+      response.status,
+      detail,
+    );
+  }
+
+  const reader = response.body?.getReader();
+  if (reader === undefined) {
+    callbacks.onError("Response had no body");
+    throw new ApiClientError("Streaming response missing body", response.status, "No body");
+  }
+
+  let sawDone = false;
+
+  try {
+    for await (const evt of parseSSE(reader)) {
+      if (evt.event === "token") {
+        let rawJson: unknown;
+        try {
+          rawJson = JSON.parse(evt.data);
+        } catch {
+          callbacks.onError("Invalid token JSON in SSE stream");
+          throw new ApiClientError("Invalid stream data", response.status, "Malformed token event");
+        }
+        const parsed = StreamTokenPayloadSchema.safeParse(rawJson);
+        if (!parsed.success) {
+          const msg = "Token event failed validation";
+          callbacks.onError(msg);
+          throw new ApiClientError(msg, response.status, msg);
+        }
+        callbacks.onToken(parsed.data.text);
+      } else if (evt.event === "done") {
+        let rawJson: unknown;
+        try {
+          rawJson = JSON.parse(evt.data);
+        } catch {
+          callbacks.onError("Invalid done JSON in SSE stream");
+          throw new ApiClientError("Invalid stream data", response.status, "Malformed done event");
+        }
+        const parsed = StreamDoneSchema.safeParse(rawJson);
+        if (!parsed.success) {
+          const msg = "Done event failed validation";
+          callbacks.onError(msg);
+          throw new ApiClientError(msg, response.status, msg);
+        }
+        callbacks.onDone(parsed.data.citations, parsed.data.meta);
+        sawDone = true;
+        return;
+      }
+    }
+  } catch (error: unknown) {
+    if (error instanceof ApiClientError) {
+      throw error;
+    }
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw error;
+    }
+    const message = error instanceof Error ? error.message : "Stream read failed";
+    callbacks.onError(message);
+    throw new ApiClientError(message, response.status, message);
+  }
+
+  if (!sawDone) {
+    const msg = "Stream ended before done event";
+    callbacks.onError(msg);
+    throw new ApiClientError(msg, response.status, msg);
+  }
 }

@@ -237,6 +237,11 @@ function AssistantBody({ message }: AssistantBodyProps) {
             <MarkdownChunk key={`${message.id}-md-${String(index)}`} content={segment.value} />
           ),
         )}
+        {message.streaming === true ? (
+          <span className="stream-caret stream-caret-blink ml-0.5 inline text-chatFg" aria-hidden>
+            ▍
+          </span>
+        ) : null}
       </div>
 
       {message.citations !== undefined && message.citations.length > 0 ? (

@@ -3,26 +3,51 @@ import logging
 import re
 import time
 import uuid
+from collections.abc import AsyncIterator
 from typing import Annotated, Any
 
 import asyncpg
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, File, HTTPException, Request, UploadFile
+from fastapi.responses import StreamingResponse
 from openai import APIError
 from pydantic import BaseModel
 
 from app import db
 from app.config import settings
 from app.embeddings import embed_single, embed_texts
-from app.llm import generate_answer
-from app.models import AskRequest, AskResponse, Citation, MetaInfo, UploadResponse
+from app.llm import generate_answer, stream_answer
+from app.models import (
+    AskRequest,
+    AskResponse,
+    Citation,
+    MetaInfo,
+    StreamDoneEvent,
+    StreamTokenEvent,
+    UploadResponse,
+)
 from app.pdf import DocumentChunk, process_pdf, slugify_filename
-from app.search import get_total_controls, hybrid_search
+from app.search import SearchResult, get_total_controls, hybrid_search
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 CITATION_PATTERN = re.compile(r"\[([A-Z]{2}-\d+(?:\(\d+\))?)\]")
 PDF_MAGIC = b"%PDF"
+
+
+def _citations_for_answer(answer: str, results: list[SearchResult]) -> list[Citation]:
+    """Map bracket citations in `answer` to citation rows from search `results`."""
+    cited_ids = set(CITATION_PATTERN.findall(answer))
+    return [
+        Citation(
+            control_id=r.id,
+            title=r.title,
+            family=r.family,
+            relevance_score=round(r.score, 4),
+        )
+        for r in results
+        if r.id in cited_ids
+    ]
 
 
 class HealthResponse(BaseModel):
@@ -199,17 +224,7 @@ async def ask(request: AskRequest) -> AskResponse:
                 detail="Answer generation unavailable",
             ) from None
 
-        cited_ids = set(CITATION_PATTERN.findall(answer))
-        citations = [
-            Citation(
-                control_id=r.id,
-                title=r.title,
-                family=r.family,
-                relevance_score=round(r.score, 4),
-            )
-            for r in results
-            if r.id in cited_ids
-        ]
+        citations = _citations_for_answer(answer, results)
 
     total = await get_total_controls(pool)
     latency_ms = int((time.monotonic() - start) * 1000)
@@ -221,3 +236,77 @@ async def ask(request: AskRequest) -> AskResponse:
     )
 
     return AskResponse(answer=answer, citations=citations, meta=meta)
+
+
+async def _sse_done_line(pool: asyncpg.Pool, started: float, citations: list[Citation]) -> str:
+    """Build one SSE `done` event string with citations and meta (latency includes full stream)."""
+    total = await get_total_controls(pool)
+    latency_ms = int((time.monotonic() - started) * 1000)
+    meta = MetaInfo(
+        model=settings.anthropic_model,
+        search_method="hybrid_rrf",
+        latency_ms=latency_ms,
+        controls_searched=total,
+    )
+    done = StreamDoneEvent(citations=citations, meta=meta)
+    return f"event: done\ndata: {done.model_dump_json()}\n\n"
+
+
+@router.post("/ask/stream")
+async def ask_stream(http_request: Request, payload: AskRequest) -> StreamingResponse:
+    """Same pipeline as /ask, but stream Claude deltas as SSE; final event sends citations."""
+    start = time.monotonic()
+
+    try:
+        query_embedding = await embed_single(payload.question)
+    except Exception:
+        logger.exception("Embedding request failed")
+        raise HTTPException(
+            status_code=502,
+            detail="Embedding service unavailable",
+        ) from None
+
+    pool = db.get_pool()
+
+    results = await hybrid_search(
+        pool=pool,
+        query=payload.question,
+        query_embedding=query_embedding,
+        top_k=settings.search_top_k,
+        rrf_k=settings.rrf_k,
+    )
+
+    async def event_generator() -> AsyncIterator[str]:
+        full_answer: list[str] = []
+
+        if not results:
+            msg = "No relevant controls found for your question."
+            token_evt = StreamTokenEvent(text=msg)
+            yield f"event: token\ndata: {token_evt.model_dump_json()}\n\n"
+            yield await _sse_done_line(pool, start, [])
+            return
+
+        try:
+            async for delta in stream_answer(payload.question, results):
+                if await http_request.is_disconnected():
+                    return
+                full_answer.append(delta)
+                token_evt = StreamTokenEvent(text=delta)
+                yield f"event: token\ndata: {token_evt.model_dump_json()}\n\n"
+        except Exception:
+            logger.exception("Anthropic streaming answer failed")
+            raise
+
+        answer_text = "".join(full_answer)
+        citations = _citations_for_answer(answer_text, results)
+        yield await _sse_done_line(pool, start, citations)
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )

@@ -10,6 +10,7 @@ import { Chat } from "../Chat";
 
 vi.mock("@/lib/api", () => ({
   askQuestion: vi.fn(),
+  askQuestionStream: vi.fn(),
   uploadDocument: vi.fn(),
   checkHealth: vi.fn(),
   ApiClientError: class ApiClientError extends Error {
@@ -25,7 +26,7 @@ vi.mock("@/lib/api", () => ({
 }));
 
 // Import the mock after vi.mock so we can control return values
-const { askQuestion } = await import("@/lib/api");
+const { askQuestion, askQuestionStream } = await import("@/lib/api");
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -38,6 +39,15 @@ function mockAskSuccess(answer = "This is the answer."): void {
       { control_id: "AC-01", title: "Access Control", family: "AC", relevance_score: 0.9 },
     ],
     meta: { model: "claude-3", search_method: "hybrid", latency_ms: 100, controls_searched: 50 },
+  });
+}
+
+/** Default: streaming delegates to the mocked `askQuestion` one-shot response shape. */
+function wireStreamFromAskMock(): void {
+  vi.mocked(askQuestionStream).mockImplementation(async (question, callbacks) => {
+    const response = await vi.mocked(askQuestion)(question);
+    callbacks.onToken(response.answer);
+    callbacks.onDone(response.citations, response.meta);
   });
 }
 
@@ -56,6 +66,7 @@ function renderChat(): void {
 describe("Chat", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    wireStreamFromAskMock();
   });
 
   afterEach(() => {
@@ -81,7 +92,10 @@ describe("Chat", () => {
     await user.type(textarea, "What is AC-01?");
     await user.click(sendButton);
 
-    expect(askQuestion).toHaveBeenCalledWith("What is AC-01?");
+    expect(askQuestionStream).toHaveBeenCalled();
+    const streamCalls = vi.mocked(askQuestionStream).mock.calls;
+    const firstQuestion = streamCalls[0]?.[0];
+    expect(firstQuestion).toBe("What is AC-01?");
 
     await waitFor(() => {
       expect(screen.getByText("What is AC-01?")).toBeInTheDocument();
@@ -95,8 +109,8 @@ describe("Chat", () => {
   it("shows loading state while waiting for API response", async () => {
     const user = userEvent.setup();
 
-    // Never-resolving promise to keep loading state
-    vi.mocked(askQuestion).mockReturnValueOnce(new Promise(() => {}));
+    // Never-resolving stream keeps loading until unmount
+    vi.mocked(askQuestionStream).mockReturnValueOnce(new Promise(() => {}));
 
     renderChat();
 
@@ -114,6 +128,9 @@ describe("Chat", () => {
     const user = userEvent.setup();
 
     const { ApiClientError } = await import("@/lib/api");
+    vi.mocked(askQuestionStream).mockRejectedValueOnce(
+      new ApiClientError("Request failed", 500, "Backend unavailable"),
+    );
     vi.mocked(askQuestion).mockRejectedValueOnce(
       new ApiClientError("Request failed", 500, "Backend unavailable"),
     );
