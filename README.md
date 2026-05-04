@@ -84,7 +84,7 @@ npm install
 cp .env.example .env.local
 # NEXT_PUBLIC_API_URL=http://localhost:8000 for local API
 npm run dev
-# Open http://localhost:3000
+# Landing page: http://localhost:3000 — Chat demo: http://localhost:3000/chat
 ```
 
 ## Development

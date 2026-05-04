@@ -12,4 +12,6 @@ export interface UploadButtonProps {
   chatState: ChatState;
   showToast: (message: string, variant: ToastVariant) => void;
   onUploadProcessed: (filename: string, chunksCreated: number) => void;
+  /** `composer` = ChatGPT-style circular attach in the message bar (default header styles unused). */
+  variant?: "header" | "composer";
 }

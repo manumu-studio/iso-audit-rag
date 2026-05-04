@@ -1,7 +1,8 @@
-// Scrollable transcript list with loading tail affordance.
+// Scrollable transcript list with ChatGPT-style spacing and loading dots.
 "use client";
 
 import { useEffect, useRef } from "react";
+
 import { MessageBubble } from "@/components/MessageBubble";
 import type { MessageListProps } from "./MessageList.types";
 
@@ -13,25 +14,27 @@ export function MessageList({ messages, chatState }: MessageListProps) {
   }, [messages, chatState]);
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-6">
-      <div className="mx-auto flex max-w-3xl flex-col gap-4">
-        {messages.map((message) => (
-          <MessageBubble key={message.id} message={message} />
-        ))}
+    <div className="flex w-full flex-col gap-4 pt-2">
+      {messages.map((message) => (
+        <MessageBubble key={message.id} message={message} />
+      ))}
 
-        {chatState.status === "loading" ? (
-          <div className="mr-auto flex max-w-[85%] items-center gap-3 rounded-2xl bg-surface px-4 py-3 text-sm text-muted shadow-inner shadow-black/20">
-            <span className="flex gap-1" aria-hidden="true">
-              <span className="inline-block h-2 w-2 animate-bounce rounded-full bg-muted [animation-delay:-0.2s]" />
-              <span className="inline-block h-2 w-2 animate-bounce rounded-full bg-muted [animation-delay:-0.1s]" />
-              <span className="inline-block h-2 w-2 animate-bounce rounded-full bg-muted" />
-            </span>
-            <span>Searching compliance controls...</span>
-          </div>
-        ) : null}
+      {chatState.status === "loading" ? (
+        <div className="flex min-h-8 items-center gap-3 text-base text-chatFg-tertiary">
+          <span className="inline-flex gap-1" aria-hidden="true">
+            {[0, 1, 2].map((i) => (
+              <span
+                key={String(i)}
+                className="h-1.5 w-1.5 rounded-full bg-chatFg-tertiary animate-chat-dot"
+                style={{ animationDelay: `${String(i * 120)}ms` }}
+              />
+            ))}
+          </span>
+          <span>Searching compliance controls...</span>
+        </div>
+      ) : null}
 
-        <div ref={bottomRef} />
-      </div>
+      <div ref={bottomRef} />
     </div>
   );
 }

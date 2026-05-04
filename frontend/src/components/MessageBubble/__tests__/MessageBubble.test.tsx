@@ -32,9 +32,9 @@ describe("MessageBubble", () => {
 
     expect(screen.getByText("What are access controls?")).toBeInTheDocument();
 
-    // User bubble has ml-auto for right alignment
-    const bubble = container.firstElementChild;
-    expect(bubble?.classList.contains("ml-auto")).toBe(true);
+    const row = container.firstElementChild;
+    expect(row?.classList.contains("justify-end")).toBe(true);
+    expect(container.querySelector(".rounded-chat-bubble")).not.toBeNull();
   });
 
   it("renders an assistant message with markdown content", () => {
