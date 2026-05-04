@@ -6,25 +6,19 @@ import { HowItWorks } from "@/components/landing/HowItWorks";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { LandingHero } from "@/components/landing/LandingHero";
 import { LandingNav } from "@/components/landing/LandingNav";
-import { TechBadges } from "@/components/landing/TechBadges";
-
-function SectionDivider() {
-  return (
-    <div className="flex justify-center px-4 py-2" aria-hidden>
-      <div className="h-px w-[min(1100px,92%)] bg-gradient-to-r from-transparent via-accent/25 to-transparent" />
-    </div>
-  );
-}
 
 export default function LandingPage() {
   return (
     <main className="flex min-h-screen flex-col">
       <LandingNav />
       <LandingHero />
+      {/* Ice (#e3f2ff) at hero bottom → page navy (#000a41); avoids a hard cut into Features. */}
+      <div
+        aria-hidden
+        className="h-24 w-full shrink-0 bg-[linear-gradient(180deg,#e3f2ff_0%,#8aabcc_28%,#355a7d_58%,#0f2348_82%,#000a41_100%)] md:h-32"
+      />
       <FeatureShowcase />
       <HowItWorks />
-      <SectionDivider />
-      <TechBadges />
       <CtaFooter />
       <LandingFooter />
     </main>

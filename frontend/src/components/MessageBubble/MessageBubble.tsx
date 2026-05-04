@@ -124,27 +124,31 @@ function MarkdownCodeBlock({ children }: { children?: ReactNode }) {
 }
 
 function MarkdownChunk({ content }: MarkdownChunkProps) {
-  if (content === "") {
+  if (content === "" || content.trim() === "") {
     return null;
+  }
+
+  if (content.trim().length <= 3 && !/[#\-*]/.test(content)) {
+    return <span className="text-base text-chatFg">{content}</span>;
   }
 
   const markdownComponents: Components = {
     p: ({ children }) => (
-      <p className="my-4 text-pretty text-base leading-[1.625rem] text-chatFg first:mt-0 last:mb-0">{children}</p>
+      <p className="my-3 text-pretty text-[15px] leading-7 text-chatFg first:mt-0 last:mb-0">{children}</p>
     ),
     ul: ({ children }) => (
-      <ul className="my-4 list-disc space-y-1 pl-6 text-base leading-[1.625rem] text-chatFg">{children}</ul>
+      <ul className="my-3 list-disc space-y-1.5 pl-6 text-[15px] leading-7 text-chatFg">{children}</ul>
     ),
     ol: ({ children }) => (
-      <ol className="my-4 list-decimal space-y-1 pl-6 text-base leading-[1.625rem] text-chatFg">{children}</ol>
+      <ol className="my-3 list-decimal space-y-1.5 pl-6 text-[15px] leading-7 text-chatFg">{children}</ol>
     ),
     li: ({ children }) => <li>{children}</li>,
     strong: ({ children }) => <strong className="font-semibold text-chatFg">{children}</strong>,
     h2: ({ children }) => (
-      <h2 className="mt-6 text-[1.5rem] font-semibold leading-[1.75rem] text-chatFg first:mt-0">{children}</h2>
+      <h2 className="mb-2 mt-8 border-b border-white/10 pb-2 text-[1.25rem] font-semibold leading-[1.75rem] text-chatFg first:mt-0">{children}</h2>
     ),
     h3: ({ children }) => (
-      <h3 className="mt-5 text-[1.125rem] font-semibold leading-[1.625rem] text-chatFg first:mt-0">{children}</h3>
+      <h3 className="mb-1 mt-7 text-[1.05rem] font-semibold leading-[1.5rem] text-chatFg first:mt-0">{children}</h3>
     ),
     a: ({ href, children }) =>
       href !== undefined && href !== "" ? (
