@@ -22,6 +22,35 @@ A retrieval-augmented generation pipeline ingests **NIST SP 800-53 Rev 5** contr
 
 The chat UI lets compliance teams ask natural-language questions and immediately see which controls and clauses support the answer.
 
+```mermaid
+graph TD
+  subgraph ingestion["Ingestion: OSCAL Controls (offline)"]
+    OSCAL[OSCAL JSON] --> Parser[JSON parser]
+    Parser --> Chunker[Clause-aware chunker]
+    Chunker --> Embedder1[Embedding model]
+    Embedder1 --> Controls[(controls table)]
+  end
+
+  subgraph upload["Ingestion: PDF Upload (runtime)"]
+    PDF[PDF file] --> Extract[PyMuPDF extractor]
+    Extract --> PageChunk[Page-based chunker]
+    PageChunk --> Embedder2[Embedding model]
+    Embedder2 --> Documents[(documents table)]
+  end
+
+  subgraph retrieval["Retrieval Pipeline (runtime)"]
+    Query[User question] --> QEmbed[Query embedding]
+    QEmbed --> Search[Hybrid search: BM25 + vector]
+    Search --> RRF[RRF fusion]
+    RRF --> Context[Top-K chunks + metadata]
+    Context --> LLM[Claude]
+    LLM --> Answer[Answer + citations]
+  end
+
+  Controls --> Search
+  Documents --> Search
+```
+
 ## Landing Page
 
 Calibre-inspired dark theme with constellation canvas animation, gradient hero, feature showcase, how-it-works pipeline, and tech badges.
@@ -56,22 +85,22 @@ Sidebar navigation, suggested prompts, PDF upload with progress, citation pills 
 
 ## Architecture
 
-```
-┌─────────────────────────────────┐
-│      Next.js 15 + React 19      │  Vercel
-│  Tailwind v4 · Zod · SSE client │
-└──────────────┬──────────────────┘
-               │ REST + SSE
-┌──────────────▼──────────────────┐
-│     FastAPI (Python 3.13)       │  AWS EC2
-│  Pydantic · asyncpg · pgvector  │
-└──────────────┬──────────────────┘
-               │
-┌──────────────▼──────────────────┐
-│     Hybrid Retrieval Pipeline   │  Neon Postgres
-│  BM25 + Vector · RRF Fusion     │
-│  OpenAI Embeddings · Claude LLM │
-└─────────────────────────────────┘
+```mermaid
+graph TD
+  subgraph frontend["Frontend — Vercel"]
+    Next["Next.js 15 + React 19\nTailwind v4 · Zod · SSE client"]
+  end
+
+  subgraph backend["API — AWS EC2"]
+    FastAPI["FastAPI (Python 3.13)\nPydantic · asyncpg · pgvector"]
+  end
+
+  subgraph database["Database — Neon Postgres"]
+    Pipeline["Hybrid Retrieval Pipeline\nBM25 + Vector · RRF Fusion\nOpenAI Embeddings · Claude LLM"]
+  end
+
+  Next -->|"REST + SSE"| FastAPI
+  FastAPI --> Pipeline
 ```
 
 ## API
